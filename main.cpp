@@ -1,32 +1,78 @@
-// If you want to disable RVNO NVO then:
+// if you want to disable rvno nvo then:
 //  -fno-elide-constructors
-// use -Wall for unnecessary calls to move
+// use -wall for unnecessary calls to move
 
 
 #include <iostream>
 
-class Foo
+class foo
 {
   public:
-    Foo() { std::cout << "Called Constructor\n"; }
+    foo() { std::cout << "called constructor\n"; }
+    foo( const foo& other ) { std::cout << "called copy constructor\n"; }
+	 foo& operator=(const foo& rhs ) { std::cout << "called assignemnt constructor\n"; return *this; }
+    foo( foo&& other ) { std::cout << "Called move constructor\n"; }
 
-    Foo( const Foo& other ) { std::cout << "Called Copy Constructor\n"; }
 
-    ~Foo() { std::cout << "Destructor Called\n"; }
+    ~foo() { std::cout << "destructor called\n"; }
+
+    int32_t i = 0;
 };
 
-Foo f()
+foo f()
 {
-    std::cout << "-- Inside f() before Constructing Foo\n";
-    Foo blub;
-    std::cout << "-- Inside f() after Constructing Foo\n";
-    return std::move(blub);
+    std::cout << "-- inside f() before constructing foo\n";
+    foo blub; // 2) Calling Constructor
+    std::cout << "-- inside f() after constructing foo\n";
+    return blub;
 }
 
+foo f_nrvo_multiple_paths( int32_t x )
+{
+    std::cout << "-- inside f() before constructing foo\n";
+    if( x % 2 == 0 )
+    {
+       std::cout << "Foo1\n";
+       foo foo1;
+       return foo1;
+    }
+
+	std::cout << "Foo2\n";
+	foo foo2;
+	return foo2;
+}
+
+foo f_rvo()
+{
+    std::cout << "-- inside f_rvo()\n";
+    return foo();
+}
+
+void f_nrvo_multiple_paths_working( foo& foo12, bool flag)
+{
+    std::cout << "-- inside f() before constructing foo\n";
+
+    if(flag)
+    {
+		foo12.i = 123;
+	   return;
+    }
+
+	 foo12.i = 1222;
+	 return;
+}
 
 int main()
 {
-    Foo foo1 = f();
+    foo bar;
+    f_nrvo_multiple_paths_working( bar, true );
 
     return 0;
 }
+
+
+
+
+
+
+
